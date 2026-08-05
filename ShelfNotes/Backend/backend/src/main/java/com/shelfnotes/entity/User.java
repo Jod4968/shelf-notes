@@ -7,44 +7,56 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
-@RequiredArgsConstructor
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity //Creates a table of user entity
-@Table(name = "users") // USER is a reserved keyword in some databases.
-public class User extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
 
-    @NotBlank(message = "Username is required")
-    @Column(nullable = false, unique = true, length = 30)
-    private String username;
+    @Entity
+    @Table(name = "users")
+    public class User extends BaseEntity {
 
-    @NotBlank(message = "Name is required")
-    @Column(nullable = false, length = 100)
-    private String name;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Enter a valid email address")
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+        @NotBlank(message = "Username is required")
+        @Column(nullable = false, unique = true, length = 30)
+        private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    @Column(nullable = false)
-    private String password;
+        @NotBlank(message = "Name is required")
+        @Column(nullable = false, length = 100)
+        private String name;
 
-    @Column(length = 255)
-    private String profilePicturePath;
+        @NotBlank(message = "Email is required")
+        @Email(message = "Enter a valid email address")
+        @Column(nullable = false, unique = true, length = 100)
+        private String email;
 
-    @Column(length = 50)
-    private String bio;
+        @NotBlank(message = "Password is required")
+        @Size(min = 8, message = "Password must be at least 8 characters long")
+        @Column(nullable = false)
+        private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-}
+        @Column(length = 255)
+        private String profilePicturePath;
+
+        @Column(length = 50)
+        private String bio;
+
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        private Role Trole;
+
+        @OneToMany(
+                mappedBy = "user",
+                cascade = CascadeType.ALL,
+                orphanRemoval = true
+        )
+        private List<Category> categories = new ArrayList<>();
+    }
+
