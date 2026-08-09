@@ -9,9 +9,9 @@ import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@EqualsAndHashCode
-@RequiredArgsConstructor
 
 @Entity //Creates a table of user entity
 @Table(name = "users") // USER is a reserved keyword in some databases.
