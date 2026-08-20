@@ -105,6 +105,7 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
     }
 
     // GET ONE MATERIAL
+    // GET ONE MATERIAL
     @Override
     public StudyMaterialResponseDTO getMaterialById(
             Long materialId) {
@@ -119,11 +120,15 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
                                         "Study material not found"
                                 ));
 
-        // Ownership check
-        if (!material.getCategory()
-                .getUser()
-                .getId()
-                .equals(user.getId())) {
+        boolean isOwner =
+                material.getCategory()
+                        .getUser()
+                        .getId()
+                        .equals(user.getId());
+
+        // PRIVATE → owner only
+        if (material.getVisibility() == Visibility.PRIVATE
+                && !isOwner) {
 
             throw new ResourceNotFoundException(
                     "Study material not found"

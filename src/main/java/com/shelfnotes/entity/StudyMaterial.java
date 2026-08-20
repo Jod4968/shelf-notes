@@ -11,17 +11,41 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 @Entity
-@Table(name = "study_materials")
+@Table(
+        name = "study_materials",
+        indexes = {
+                @Index(
+                        name = "idx_material_category",
+                        columnList = "category_id"
+                ),
+                @Index(
+                        name = "idx_material_type",
+                        columnList = "material_type"
+                ),
+                @Index(
+                        name = "idx_material_visibility",
+                        columnList = "visibility"
+                ),
+                @Index(
+                        name = "idx_material_created_at",
+                        columnList = "created_at"
+                ),
+                @Index(
+                        name = "idx_material_category_created",
+                        columnList = "category_id, created_at"
+                )
+        }
+)
 public class StudyMaterial extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Title is required")
     @Column(nullable = false, length = 150)
-    private String  title;
+    private String title;
 
     @Column(length = 1000)
     private String description;
@@ -39,8 +63,6 @@ public class StudyMaterial extends BaseEntity {
     private String resourceLocation;
 
     private Long fileSize;
-
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
