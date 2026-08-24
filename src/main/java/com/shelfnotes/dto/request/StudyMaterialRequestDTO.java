@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -27,11 +28,8 @@ public class StudyMaterialRequestDTO {
     @NotNull(message = "Visibility is required")
     private Visibility visibility;
 
-    @NotBlank(message = "Resource location is required")
-    private String resourceLocation;
-
-    private Long fileSize;
-
     @NotNull(message = "Category ID is required")
     private Long categoryId;
+
+    private MultipartFile file;
 }

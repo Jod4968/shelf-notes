@@ -12,6 +12,7 @@ import com.shelfnotes.mapper.StudyMaterialMapper;
 import com.shelfnotes.repository.CategoryRepository;
 import com.shelfnotes.repository.StudyMaterialRepository;
 import com.shelfnotes.repository.UserRepository;
+import com.shelfnotes.service.FileStorageService;
 import com.shelfnotes.service.StudyMaterialService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.io.IOException;
 
 @Service
 @Transactional
@@ -29,15 +30,18 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
     private final StudyMaterialRepository studyMaterialRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
 
     public StudyMaterialServiceImpl(
             StudyMaterialRepository studyMaterialRepository,
             CategoryRepository categoryRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            FileStorageService fileStorageService) {
 
         this.studyMaterialRepository = studyMaterialRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // Get currently logged-in user
@@ -74,15 +78,53 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
                                         "Category not found"
                                 ));
 
-        StudyMaterial material =
-                StudyMaterialMapper.toEntity(requestDTO);
+        if (requestDTO.getFile() == null
+                || requestDTO.getFile().isEmpty()) {
 
-        material.setCategory(category);
+            throw new IllegalArgumentException(
+                    "File is required"
+            );
+        }
 
-        StudyMaterial savedMaterial =
-                studyMaterialRepository.save(material);
+        try {
 
-        return StudyMaterialMapper.toResponse(savedMaterial);
+            // Store actual file
+            String resourceLocation =
+                    fileStorageService.storeFile(
+                            requestDTO.getFile()
+                    );
+
+            // Convert DTO → Entity
+            StudyMaterial material =
+                    StudyMaterialMapper.toEntity(requestDTO);
+
+            // Set relationship
+            material.setCategory(category);
+
+            // Store generated file information
+            material.setResourceLocation(
+                    resourceLocation
+            );
+
+            material.setFileSize(
+                    requestDTO.getFile().getSize()
+            );
+
+            // Save database record
+            StudyMaterial savedMaterial =
+                    studyMaterialRepository.save(material);
+
+            return StudyMaterialMapper.toResponse(
+                    savedMaterial
+            );
+
+        } catch (IOException e) {
+
+            throw new RuntimeException(
+                    "Could not store file",
+                    e
+            );
+        }
     }
 
     // GET MY MATERIALS - PAGINATION + SORTING
@@ -104,7 +146,6 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
         );
     }
 
-    // GET ONE MATERIAL
     // GET ONE MATERIAL
     @Override
     public StudyMaterialResponseDTO getMaterialById(
@@ -154,7 +195,7 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
                                         "Study material not found"
                                 ));
 
-        // Ownership check
+        // Only owner can update
         if (!material.getCategory()
                 .getUser()
                 .getId()
@@ -177,21 +218,63 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
                                         "Category not found"
                                 ));
 
-        // Update fields
-        material.setTitle(requestDTO.getTitle());
-        material.setDescription(requestDTO.getDescription());
-        material.setMaterialType(requestDTO.getMaterialType());
-        material.setVisibility(requestDTO.getVisibility());
-        material.setResourceLocation(
-                requestDTO.getResourceLocation()
+        material.setTitle(
+                requestDTO.getTitle()
         );
-        material.setFileSize(requestDTO.getFileSize());
+
+        material.setDescription(
+                requestDTO.getDescription()
+        );
+
+        material.setMaterialType(
+                requestDTO.getMaterialType()
+        );
+
+        material.setVisibility(
+                requestDTO.getVisibility()
+        );
+
         material.setCategory(category);
+
+        /*
+         * File is optional during update.
+         *
+         * If a new file is provided,
+         * replace the stored file information.
+         */
+        if (requestDTO.getFile() != null
+                && !requestDTO.getFile().isEmpty()) {
+
+            try {
+
+                String resourceLocation =
+                        fileStorageService.storeFile(
+                                requestDTO.getFile()
+                        );
+
+                material.setResourceLocation(
+                        resourceLocation
+                );
+
+                material.setFileSize(
+                        requestDTO.getFile().getSize()
+                );
+
+            } catch (IOException e) {
+
+                throw new RuntimeException(
+                        "Could not store file",
+                        e
+                );
+            }
+        }
 
         StudyMaterial updatedMaterial =
                 studyMaterialRepository.save(material);
 
-        return StudyMaterialMapper.toResponse(updatedMaterial);
+        return StudyMaterialMapper.toResponse(
+                updatedMaterial
+        );
     }
 
     // DELETE
@@ -208,7 +291,7 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
                                         "Study material not found"
                                 ));
 
-        // Ownership check
+        // Only owner can delete
         if (!material.getCategory()
                 .getUser()
                 .getId()
@@ -223,7 +306,6 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
     }
 
     // SEARCH MATERIALS BY TITLE
-
     @Override
     public Page<StudyMaterialResponseDTO> searchMaterials(
             String keyword,

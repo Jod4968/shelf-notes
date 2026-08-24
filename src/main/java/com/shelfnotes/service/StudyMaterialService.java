@@ -7,14 +7,14 @@ import com.shelfnotes.enums.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.io.IOException;
 
 public interface StudyMaterialService {
 
     // CREATE
     StudyMaterialResponseDTO createMaterial(
             StudyMaterialRequestDTO requestDTO
-    );
+    ) throws IOException;
 
     // GET MY MATERIALS - PAGINATION + SORTING
     Page<StudyMaterialResponseDTO> getMyMaterials(
