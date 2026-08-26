@@ -20,7 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.core.io.Resource;
 import java.io.IOException;
 
 @Service
@@ -274,6 +274,41 @@ public class StudyMaterialServiceImpl implements StudyMaterialService {
 
         return StudyMaterialMapper.toResponse(
                 updatedMaterial
+        );
+    }
+
+    // DOWNLOAD FILE
+    @Override
+    public Resource downloadMaterial(Long materialId)
+            throws IOException {
+
+        User user = getCurrentUser();
+
+        StudyMaterial material =
+                studyMaterialRepository
+                        .findById(materialId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Study material not found"
+                                ));
+
+        boolean isOwner =
+                material.getCategory()
+                        .getUser()
+                        .getId()
+                        .equals(user.getId());
+
+        // PRIVATE material → owner only
+        if (material.getVisibility() == Visibility.PRIVATE
+                && !isOwner) {
+
+            throw new ResourceNotFoundException(
+                    "Study material not found"
+            );
+        }
+
+        return fileStorageService.loadFile(
+                material.getResourceLocation()
         );
     }
 

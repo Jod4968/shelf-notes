@@ -6,8 +6,10 @@ import com.shelfnotes.enums.MaterialType;
 import com.shelfnotes.enums.Visibility;
 import com.shelfnotes.service.StudyMaterialService;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -108,6 +110,25 @@ public class StudyMaterialController {
         return ResponseEntity.ok(
                 studyMaterialService.getMaterialById(id)
         );
+    }
+
+    // DOWNLOAD FILE
+    @GetMapping("/{id}/download")
+    public ResponseEntity<Resource> downloadMaterial(
+            @PathVariable Long id) throws IOException {
+
+        Resource resource =
+                studyMaterialService.downloadMaterial(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" +
+                                resource.getFilename() +
+                                "\""
+                )
+                .body(resource);
     }
 
     // UPDATE

@@ -2,6 +2,7 @@ package com.shelfnotes.mapper;
 
 import com.shelfnotes.dto.request.StudyMaterialRequestDTO;
 import com.shelfnotes.dto.response.StudyMaterialResponseDTO;
+import com.shelfnotes.dto.response.CategoryResponseDTO;
 import com.shelfnotes.entity.StudyMaterial;
 
 public class StudyMaterialMapper {
@@ -37,6 +38,28 @@ public class StudyMaterialMapper {
 
         response.setFileSize(
                 material.getFileSize()
+        );
+
+        // Category
+        if (material.getCategory() != null) {
+
+            CategoryResponseDTO category =
+                    new CategoryResponseDTO();
+
+            category.setId(
+                    material.getCategory().getId()
+            );
+
+            category.setName(
+                    material.getCategory().getName()
+            );
+
+            response.setCategory(category);
+        }
+
+        // Created date
+        response.setCreatedAt(
+                material.getCreatedAt()
         );
 
         return response;

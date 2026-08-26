@@ -2,6 +2,8 @@ package com.shelfnotes.service.impl;
 
 import com.shelfnotes.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,5 +71,23 @@ public class FileStorageServiceImpl implements FileStorageService {
         );
 
         return targetLocation.toString();
+    }
+    @Override
+    public Resource loadFile(String resourceLocation)
+            throws IOException {
+
+        Path filePath = Paths.get(resourceLocation)
+                .toAbsolutePath()
+                .normalize();
+
+        if (!Files.exists(filePath)) {
+            throw new IOException("File not found: " + resourceLocation);
+        }
+
+        if (!Files.isReadable(filePath)) {
+            throw new IOException("File is not readable: " + resourceLocation);
+        }
+
+        return new FileSystemResource(filePath);
     }
 }

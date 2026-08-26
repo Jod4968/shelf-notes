@@ -4,6 +4,7 @@ import com.shelfnotes.dto.request.StudyMaterialRequestDTO;
 import com.shelfnotes.dto.response.StudyMaterialResponseDTO;
 import com.shelfnotes.enums.MaterialType;
 import com.shelfnotes.enums.Visibility;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,6 +26,11 @@ public interface StudyMaterialService {
     StudyMaterialResponseDTO getMaterialById(
             Long materialId
     );
+
+    // DOWNLOAD FILE
+    Resource downloadMaterial(
+            Long materialId
+    ) throws IOException;
 
     // UPDATE
     StudyMaterialResponseDTO updateMaterial(
