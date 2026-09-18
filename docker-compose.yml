@@ -1,0 +1,46 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: shelfnote-mysql
+
+    environment:
+      MYSQL_DATABASE: shelfnotes
+      MYSQL_ROOT_PASSWORD: Sagar@80065
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: shelfnote-app
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/shelfnotes
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 86400000
+
+      FILE_UPLOAD_DIR: /app/uploads
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  mysql_data:
+  uploads_data:
